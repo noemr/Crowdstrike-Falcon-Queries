@@ -9,12 +9,17 @@ A few queries for hunting in Falcon
 | table([@timestamp, ComputerName, UserName, ParentBaseFileName, FileName, CommandLine])
 | sort(-@timestamp)
 
+
+
 2. Execution & Persistence: Scheduled Task Creation
 #event_simpleName=ProcessRollup2
 | FileName=schtasks.exe
 | CommandLine="* /create *"
 | table([@timestamp, ComputerName, UserName, CommandLine])
 | sort(-@timestamp)
+
+
+
 
 4. Privilege Escalation: LSASS Process Access
 #event_simpleName=ProcessRollup2
@@ -27,6 +32,9 @@ A few queries for hunting in Falcon
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine, ChildFileName, ChildCommandLine])
 | sort(-@timestamp)
 
+
+
+
 6. Defense Evasion: Disabling Security Tools
 #event_simpleName=ProcessRollup2
 | (FileName="sc.exe" OR FileName="net.exe")
@@ -35,12 +43,18 @@ A few queries for hunting in Falcon
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
 
+
+
+
 8. Credential Access: Password Dumps/Mimikatz
 #event_simpleName=ProcessRollup2
 | (FileName="mimikatz.exe" OR FileName="procdump.exe")
 OR (CommandLine="*lsass.exe* dump*" OR CommandLine="*sekurlsa::logonpasswords*")
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
+
+
+
 
 10. Discovery: Active Directory Reconnaissance
 #event_simpleName=ProcessRollup2
@@ -49,12 +63,18 @@ OR (CommandLine="*lsass.exe* dump*" OR CommandLine="*sekurlsa::logonpasswords*")
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
 
+
+
+
 12. Lateral Movement: Remote Service Creation/Execution
 #event_simpleName=ProcessRollup2
 | (FileName="sc.exe" OR FileName="psexec.exe" OR FileName="wmic.exe")
 | (CommandLine="* \\\\* create *" OR CommandLine="* \\\\* service *" OR CommandLine="* /node:* process call create *")
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
+
+
+
 
 14. Lateral Movement: Remote Desktop Protocol (RDP) Connections
 #event_simpleName=UserLogon
@@ -67,13 +87,18 @@ OR (CommandLine="*lsass.exe* dump*" OR CommandLine="*sekurlsa::logonpasswords*")
 | where MstscCommandLine!=null
 | table([@timestamp, ComputerName, UserName, LocalAddressIP4, MstscCommandLine])
 | sort(-@timestamp)
-This query identifies successful Remote Desktop Protocol (RDP) logons (LogonType 10) and attempts to correlate them with the mstsc.exe process. While RDP is legitimate, unusual RDP activity from new source IPs or by accounts not typically using RDP can indicate lateral movement.
+
+
+
+
 15. Exfiltration: Data Staging/Compression
 #event_simpleName=ProcessRollup2
 | (FileName="rar.exe" OR FileName="7z.exe" OR FileName="winzip.exe" OR FileName="tar.exe")
 | (CommandLine="* a *" OR CommandLine="* -a *" OR CommandLine="* -cf *" OR CommandLine="* -cvf *")
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
+
+
 
 
 17. Exfiltration: Unusual Outbound Network Connections to Cloud Storage/File Sharing
@@ -91,6 +116,9 @@ This query identifies successful Remote Desktop Protocol (RDP) logons (LogonType
 | sort(-@timestamp)
 
 
+
+
+
 RED TEAM Activities
  Initial Access: Malicious Document Spawning PowerShell/CMD
 #event_simpleName=ProcessRollup2
@@ -100,6 +128,8 @@ RED TEAM Activities
 | table([@timestamp, ComputerName, UserName, ParentBaseFileName, FileName, CommandLine])
 | sort(-@timestamp)
 
+
+
 2. Execution & Persistence: Scheduled Task Creation by Non-System Accounts
 #event_simpleName=ProcessRollup2
 | FileName="schtasks.exe"
@@ -107,6 +137,8 @@ RED TEAM Activities
 | UserName!="NT AUTHORITY\\SYSTEM" AND UserName!="NT AUTHORITY\\LOCAL SERVICE" AND UserName!="NT AUTHORITY\\NETWORK SERVICE"
 | table([@timestamp, ComputerName, UserName, CommandLine])
 | sort(-@timestamp)
+
+
 
 4. Privilege Escalation: LSASS Process Access for Credential Dumping
 #event_simpleName=ProcessRollup2
@@ -119,6 +151,8 @@ RED TEAM Activities
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine, ChildFileName, ChildCommandLine])
 | sort(-@timestamp)
 
+
+
 6. Defense Evasion: Disabling Windows Defender or Security Services
 #event_simpleName=ProcessRollup2
 | (FileName="sc.exe" OR FileName="net.exe")
@@ -127,11 +161,15 @@ RED TEAM Activities
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
 
+
+
 8. Credential Access: Execution of Known Credential Dumping Tools
 #event_simpleName=ProcessRollup2
 | (FileName="mimikatz.exe" OR FileName="procdump.exe" OR FileName="hashdump.exe" OR FileName="lazagne.exe")
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
+
+
 
 10. Discovery: Active Directory Reconnaissance with Common Tools
 #event_simpleName=ProcessRollup2
@@ -140,12 +178,17 @@ RED TEAM Activities
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
 
+
+
 12. Lateral Movement: Remote Service Creation via PsExec/WMIC/SC
 #event_simpleName=ProcessRollup2
 | (FileName="psexec.exe" OR FileName="wmic.exe" OR FileName="sc.exe")
 | (CommandLine="* \\\\* create *" OR CommandLine="* \\\\* service *" OR CommandLine="* /node:* process call create *")
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine])
 | sort(-@timestamp)
+
+
+
 
 14. Lateral Movement: Suspicious RDP Logons from Unusual Sources
 #event_simpleName=UserLogon
@@ -161,6 +204,8 @@ RED TEAM Activities
 | logon_count <= 2
 | table([@timestamp, ComputerName, UserName, LocalAddressIP4, RDP_Source_IP, logon_count])
 | sort(-@timestamp)
+
+
 
 16. Collection: Data Staging with Archiving Tools
 #event_simpleName=ProcessRollup2
@@ -390,7 +435,7 @@ FileName=/(txt|pdf|doc|docm|ppt|html)\.zip/i
 #event_simpleName=ProcessRollup2
 | CommandLine="*del *.key*" OR CommandLine="*rm *.key*" OR CommandLine="*erase *.key*" ComputerName=*
 | table([@timestamp, ComputerName, UserName, FileName, CommandLine], limit=100, sortby=@timestamp, order=desc) 
-El .key es el archivo en concreto que estamos buscando, se puede reemplazar al igual que el ComputerName.
+
 
 
 
@@ -449,7 +494,7 @@ El .key es el archivo en concreto que estamos buscando, se puede reemplazar al i
 | table([@timestamp, ComputerName, UserName, ParentBaseFileName, FileName, CommandLine], 
 
 
-Identificar conexiones de red de procesos que normalmente no generan tráfico. Svchost.exe Making Outbound Network Connections
+Svchost.exe Making Outbound Network Connections
 #event_simpleName=NetworkConnectIP4
 | FileName="svchost.exe"
 | !in(RemotePort, values=[53, 88, 135, 389, 445, 464, 636, 3268, 3269, 49152-65535]) // Exclude common ports for legitimate svchost activity
@@ -501,7 +546,6 @@ Identificar conexiones de red de procesos que normalmente no generan tráfico. S
 | sort(field=_count, order=desc, limit=50)
 
 
-Process Injection (T1055) and Ingress Tool Transfer (T1105) are critical MITRE ATT&CK techniques that often precede or enable further malicious activity. Here are several CrowdStrike Query Language (CQL) queries designed to hunt for these techniques.
 T1055: Process Injection
 Process injection involves running custom code in the address space of another process. This can be used to evade defenses, elevate privileges, or hide malicious activity. Detecting it often relies on identifying anomalous process behavior.
 1. Orphaned Processes (Missing Parent Process)
@@ -531,7 +575,7 @@ Process injection involves running custom code in the address space of another p
 | table([@timestamp, ComputerName, FileName, ImageFileName, ModuleFileName, ModuleBaseAddress], limit=100, sortby=@timestamp, order=desc)
 
 T1105: Ingress Tool Transfer
-Ingress Tool Transfer involves transferring tools or files from an external source into a compromised environment. This is a common step for attackers to bring in their preferred utilities, malware, or additional payloads.
+
 1. Download Utilities Executing with Suspicious Command Lines
 #event_simpleName=ProcessRollup2
 | in(FileName, values=["bitsadmin.exe", "certutil.exe", "powershell.exe", "curl.exe", "wget.exe"])
